@@ -1,0 +1,50 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Load dataset
+data = pd.read_csv('ecommerce_data.csv')
+
+# Data cleaning and preprocessing
+data.dropna(inplace=True)
+
+# Feature engineering
+data['TotalSpend'] = data['Quantity'] * data['Price']
+features = data[['TotalSpend', 'Frequency']]  # Example features
+
+# Normalize data
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+
+# Determine the optimal number of clusters using K-Means
+inertia = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k)
+    kmeans.fit(scaled_features)
+    inertia.append(kmeans.inertia_)
+
+# Plot Elbow Method
+plt.plot(range(1, 11), inertia)
+plt.title('Elbow Method')
+plt.xlabel('Number of Clusters')
+plt.ylabel('Inertia')
+plt.show()
+
+# Fit KMeans with optimal clusters (assume k=3 is optimal)
+kmeans = KMeans(n_clusters=3)
+clusters = kmeans.fit_predict(scaled_features)
+
+# Add cluster labels to the original data
+data['Cluster'] = clusters
+
+# Visualize the clusters
+pca = PCA(n_components=2)
+reduced_data = pca.fit_transform(scaled_features)
+
+plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c=clusters, cmap='viridis')
+plt.title('Customer Segmentation')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.show()
